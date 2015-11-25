@@ -1,4 +1,5 @@
 FaucetDice
+----------
 FaucetDice is a bitcoin faucet script that is also a fully functional dice game. The user can cashout using faucetbox. 
 Includes a faucet referral system built-in and funcaptcha for anti-bot. Just need to update the API keys in the 
 two index.php files. 
