@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 25, 2015 at 01:14 AM
+-- Generation Time: Nov 25, 2015 at 07:30 PM
 -- Server version: 5.5.45-cll-lve
 -- PHP Version: 5.4.23
 
@@ -16,9 +16,11 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8 */;
 
+--
+-- Database: `dbengine`
+--
 
-
---------------------------------------------------------
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `faucetbox`
@@ -33,8 +35,7 @@ CREATE TABLE IF NOT EXISTS `faucetbox` (
   `reefer` varchar(100) NOT NULL,
   PRIMARY KEY (`count`),
   UNIQUE KEY `addy` (`addy`,`ipp`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1574 ;
-
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1587 ;
 
 -- --------------------------------------------------------
 
@@ -56,8 +57,7 @@ CREATE TABLE IF NOT EXISTS `faucetboxgames` (
   `batb` int(20) NOT NULL,
   PRIMARY KEY (`count`),
   UNIQUE KEY `gid` (`gid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=771278 ;
-
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=771705 ;
 
 -- --------------------------------------------------------
 
@@ -70,8 +70,6 @@ CREATE TABLE IF NOT EXISTS `fbbal` (
   `count` int(1) NOT NULL,
   PRIMARY KEY (`balance`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
