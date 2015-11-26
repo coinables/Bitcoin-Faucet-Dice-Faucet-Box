@@ -59,17 +59,6 @@ CREATE TABLE IF NOT EXISTS `faucetboxgames` (
   UNIQUE KEY `gid` (`gid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1000 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `fbbal`
---
-
-CREATE TABLE IF NOT EXISTS `fbbal` (
-  `balance` decimal(10,8) NOT NULL,
-  `count` int(1) NOT NULL,
-  PRIMARY KEY (`balance`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

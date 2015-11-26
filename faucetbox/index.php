@@ -25,9 +25,10 @@
 	
 	$claimMsg = "Welcome to Faucet+Dice";
 
-		$getfaucetbal = mysqli_query($conn, "SELECT * FROM fbbal WHERE count = 1");
-		$getfaucetresult = mysqli_fetch_assoc($getfaucetbal);
-		$getfaucetbal2 = $getfaucetresult['balance'];
+		$currency = "BTC";
+		$faucetbox = new Faucetbox($api_key, $currency);	
+		$faucetBal = $faucetbox->getBalance();
+		$getfaucetbal2 = $faucetBal["balance_bitcoin"];
 
 	if(isset($_POST['start']) && !empty($_POST['start']))
 {
