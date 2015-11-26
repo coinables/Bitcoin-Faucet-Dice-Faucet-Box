@@ -16,6 +16,16 @@
 	$balance = $rowAssoc['bbb'];
 	$reefer = $rowAssoc['reefer'];
 	
+						
+	//redirect if not logged in 
+	if($rowNav < 1){
+	header('Location: ../faucetbox');
+	} else {
+	
+	$diceMsg = "Welcome to Faucet+Dice";
+	$calcBal = $balance / 100000000;
+	
+	if(isset($_POST['rollHi'])){
 	//auto cashout if bal over 9999
 	if($balance > 9999){
 	   	$currency = "BTC";
@@ -28,16 +38,6 @@
 		  		header('Location: ../faucetbox');
 	}
 	}
-					
-	//redirect if not logged in 
-	if($rowNav < 1){
-	header('Location: ../faucetbox');
-	} else {
-	
-	$diceMsg = "Welcome to Faucet+Dice";
-	$calcBal = $balance / 100000000;
-	
-	if(isset($_POST['rollHi'])){
 	$betAmt = $_POST['bet'];
 	$probability = $_POST['multiplier'];
 	if(!is_numeric($betAmt) || !is_numeric($probability)){
@@ -122,6 +122,18 @@
 } //ends post
 	
 	if(isset($_POST['rollLo'])){
+	//auto cashout if bal over 9999
+	if($balance > 9999){
+	   	$currency = "BTC";
+		$faucetbox = new Faucetbox($api_key, $currency);
+		$result = $faucetbox->send($userAddy, $amount);
+		  if($result["success"] === true){
+		  $_SESSION['cashout'] = $result["html"];
+		  //reset balance to zero
+		  mysqli_query($conn, "UPDATE faucetbox SET bbb = 0 WHERE addy = '$userAddy'");
+		  		header('Location: ../faucetbox');
+	}
+	}
 	$betAmt = $_POST['bet'];
 	$probability = $_POST['multiplier'];
 	if(!is_numeric($betAmt) || !is_numeric($probability)){
