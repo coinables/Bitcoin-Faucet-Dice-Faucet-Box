@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `faucetbox` (
   `reefer` varchar(100) NOT NULL,
   PRIMARY KEY (`count`),
   UNIQUE KEY `addy` (`addy`,`ipp`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1587 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `faucetboxgames` (
   `batb` int(20) NOT NULL,
   PRIMARY KEY (`count`),
   UNIQUE KEY `gid` (`gid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=771705 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1000 ;
 
 -- --------------------------------------------------------
 
