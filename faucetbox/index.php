@@ -362,7 +362,7 @@ a {
  
  <div id="reefCont"><h3>Referral Program</h3>
  Refer another user and receive 100% referral commission on all their faucet claims!<br><br>
- Your referral URL:  <input type="text" value="http://yourwebsite.com/?ref=YOUR_BITCOIN_ADDRESS" size="52" onClick="this.select();" readonly>
+ Your referral URL:  <input type="text" value="http://yourwebsite.com/faucetbox/?ref=YOUR_BITCOIN_ADDRESS" size="52" onClick="this.select();" readonly>
   </div>
   <br>
    <br>
