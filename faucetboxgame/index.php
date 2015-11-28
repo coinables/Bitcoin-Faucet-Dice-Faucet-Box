@@ -28,6 +28,7 @@
 	if(isset($_POST['rollHi'])){
 	//auto cashout if bal over 9999
 	if($balance > 9999){
+	    $amount = $rowAssoc['bbb'];
 	   	$currency = "BTC";
 		$faucetbox = new Faucetbox($api_key, $currency);
 		$result = $faucetbox->send($userAddy, $amount);
@@ -124,6 +125,7 @@
 	if(isset($_POST['rollLo'])){
 	//auto cashout if bal over 9999
 	if($balance > 9999){
+	    $amount = $rowAssoc['bbb'];
 	   	$currency = "BTC";
 		$faucetbox = new Faucetbox($api_key, $currency);
 		$result = $faucetbox->send($userAddy, $amount);
@@ -247,7 +249,7 @@
 	    $cashQuery = mysqli_query($conn, "SELECT * FROM faucetbox WHERE addy = '$userAddy'") or die("fatal error.");
         $cashResult = mysqli_fetch_assoc($cashQuery);
         $amount = $cashResult['bbb'];
-		if($amount > 29000){
+		if($amount > 99999){
 		die("Stop hacking you hacker");
 		} else if ($amount < 1){
 		$diceMsg = "You need at least 1 satoshi to cashout";
