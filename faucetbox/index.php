@@ -12,6 +12,9 @@
 	$timeBetweenClaims = 1800; //wait time between claims in seconds
 	$private_key = "1a1a1a_1a1a1a_1a_1a1"; //funcaptcha private key
 	$publicKey = "1b1b1_1b1b_1b1b1b1"; //funcaptcha public key
+	$currency = "BTC"; //select currency BTC, LTC, DOGE, PPC, XPM or DASH
+	// example if you want to change to Dogecoin $currency = "DOGE";
+	
 	
 	
 	require_once("faucetbox.php");
@@ -25,7 +28,7 @@
 	
 	$claimMsg = "Welcome to Faucet+Dice";
 
-		$currency = "BTC";
+		
 		$faucetbox = new Faucetbox($api_key, $currency);	
 		$faucetBal = $faucetbox->getBalance();
 		$getfaucetbal2 = $faucetBal["balance_bitcoin"];
@@ -60,7 +63,7 @@
 		  mysqli_query($conn, "UPDATE faucetbox SET bbb = 300, time = '$time' WHERE addy = '$userAddy'");
 			//check if ref and send ref payment
 			
-		    $currency = "BTC";
+		    
 		    $faucetbox = new Faucetbox($api_key, $currency);
 			$countSt = strlen($reeferPay);
 				if($countSt > 5){
@@ -84,7 +87,7 @@
 		  //new user registered forward to game area
 		  //payout to refeer
 		  
-		  $currency = "BTC";
+		  
 		  $faucetbox = new Faucetbox($api_key, $currency);
 		  $reefResult2 = $faucetbox->sendReferralEarnings($reefer, $reefAmount);
 		  session_start();
@@ -333,12 +336,12 @@ a {
 <body>
 <br><div id="user"><img src="logo.png"></div>
 <div id="buttons">
-<div id="balance2">FAUCET BALANCE<br><span id="bprint"><?php echo $getfaucetbal2; ?> BTC</span></div>
+<div id="balance2">FAUCET BALANCE<br><span id="bprint"><?php echo $getfaucetbal2." ".$currency; ?></span></div>
 </div>
 <br><br><center>--AD SPOT--</center><br>
     <div id="active"><?php if(isset($_SESSION['cashout'])){echo $_SESSION['cashout'];} else {echo $claimMsg;} ?></div>
 	
-    <div id="balance">BALANCE<br><span id="bprint">0.00000000 BTC</span></div>
+    <div id="balance">BALANCE<br><span id="bprint">0.00000000 <?php echo $currency; ?></span></div>
         <div id="claimCont"><h3>Faucet+Dice is a free game where you can earn real bitcoins!</h3> 
 		Just enter your bitcoin address below, fill out the captcha, and press Play. You can start a new game every 30 minutes. 
 		You can withdrawal immediately to FaucetBox. 

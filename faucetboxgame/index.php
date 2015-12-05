@@ -7,6 +7,9 @@
 	
 	//custom parameters
 	$api_key = "1234XYB"; //faucetbox API KEY
+	$currency = "BTC"; //select currency BTC, LTC, DOGE, PPC, XPM or DASH
+	// example if you want to change to Dogecoin $currency = "DOGE";
+	
 	
 	$userAddy = $_SESSION['cow'];
 	require_once("faucetbox.php");
@@ -29,7 +32,7 @@
 	//auto cashout if bal over 9999
 	if($balance > 9999){
 	    $amount = $rowAssoc['bbb'];
-	   	$currency = "BTC";
+	   	
 		$faucetbox = new Faucetbox($api_key, $currency);
 		$result = $faucetbox->send($userAddy, $amount);
 		  if($result["success"] === true){
@@ -126,7 +129,7 @@
 	//auto cashout if bal over 9999
 	if($balance > 9999){
 	    $amount = $rowAssoc['bbb'];
-	   	$currency = "BTC";
+	   	
 		$faucetbox = new Faucetbox($api_key, $currency);
 		$result = $faucetbox->send($userAddy, $amount);
 		  if($result["success"] === true){
@@ -254,7 +257,7 @@
 		} else if ($amount < 1){
 		$diceMsg = "You need at least 1 satoshi to cashout";
 		} else {
-		$currency = "BTC";
+		
 		$faucetbox = new Faucetbox($api_key, $currency);
 		$result = $faucetbox->send($userAddy, $amount);
 		  if($result["success"] === true){
@@ -638,7 +641,7 @@ function noteLimit(element, stopAt)
 
 </td><td>
     <div id="active"><?php echo $diceMsg; ?></div><center><span id="error">Balances are not saved! Be sure to click cashout when you are done playing!</span></center>
-    <div id="balance">BALANCE<br><span id="bprint"><?php echo sprintf('%.8F',$calcBal); ?> BTC</span><br>
+    <div id="balance">BALANCE<br><span id="bprint"><?php echo sprintf('%.8F',$calcBal)." ".$currency; ?></span><br>
 	<form method="post"><input type="submit" name="cashout" id="cashout" value="Cashout To FaucetBox"></form>
 	</div>
         <div id="claimCont"><?php echo $message; ?>
