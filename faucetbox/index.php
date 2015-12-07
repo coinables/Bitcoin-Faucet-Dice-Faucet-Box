@@ -57,7 +57,7 @@
 			if($timeDif < $timeBetweenClaims){
 			$message = "You must wait 30 minutes between plays";
 			} else {
-		  mysqli_query($conn, "UPDATE faucetbox SET bbb = 300, time = '$time' WHERE addy = '$userAddy'");
+		  mysqli_query($conn, "UPDATE faucetbox SET bbb = '$startBal', time = '$time' WHERE addy = '$userAddy'");
 			//check if ref and send ref payment
 			
 		    $currency = "BTC";
