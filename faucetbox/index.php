@@ -1,14 +1,23 @@
 <?php
-	$conn = mysqli_connect("localhost", "db_username", "db_password", "database_name");
-	if (mysqli_connect_errno()){
-	echo "Connection to DB failed" . mysqli_connect_error();
+
+define('DB_HOST', '127.0.0.1');
+define('DB_NAME', 'your_dbname');
+define('DB_USER', 'db_username');
+define('DB_PASS', 'your_db_password');
+
+	try{
+	$conn = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
+	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	}catch(PDOException $e){
+	echo $e->getMessage();
+	die();
 	}
 	session_start();
 	
 	//custom parameters
 	$api_key = "1234XYB"; //faucetbox API KEY
 	$startBal = 300; //starting balance for users
-	$reefAmount = 300; //referral amount
+	$reefAmount = 60; //referral amount
 	$timeBetweenClaims = 1800; //wait time between claims in seconds
 	require_once("ayah.php"); //Are You A Human Bot Protection insert your keys in the ayah_config file
 	                          //Sign up for a free account at areyouahuman.com to get your keys
@@ -16,9 +25,11 @@
 	
 	$ayah = new AYAH();
 	$reefer = $_GET['ref'];
-	mysqli_set_charset($conn,"utf8");
-	$reefer = mysqli_real_escape_string($conn, $reefer);
-	$ipp = $_SERVER['REMOTE_ADDR'];
+	
+	if (!$ipp = filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE))
+    {
+      die('Invalid IP address.');
+    }
 	$timeRaw = time();
 	$timeNewUser = time();
 	$zero = 0;
@@ -37,25 +48,26 @@
 		if ($score)  
 	{
 		$userAddy = $_POST['bitad'];
-		mysqli_set_charset($conn,"utf8");
-		$userAddy = mysqli_real_escape_string($conn, $userAddy);
 		if($reefer == $userAddy){
 		die("You Cant Refer Yourself");
 		}
 				
 		//check if already in DB
-		  $checkAddy = mysqli_query($conn, "SELECT * FROM faucetbox WHERE addy = '$userAddy'");
-		  $numrowAddy = mysqli_num_rows($checkAddy);
+		  $checkAddy = $conn->prepare("SELECT * FROM faucetbox WHERE addy = ?");
+		  $checkAddy->execute(array($userAddy));
+		  $numrowAddy = count($checkAddy->fetchAll());
 		  if($numrowAddy > 0){
 		  //returning visitor forward to game area
-			$timeQuery = mysqli_query($conn, "SELECT * FROM faucetbox WHERE addy = '$userAddy'");
-			$timeResult = mysqli_fetch_assoc($timeQuery);
-			$timeDif = $time - $timeResult['time'];
-			$reeferPay = $timeResult['reefer'];
+			$returnVisit = $conn->prepare("SELECT * FROM faucetbox WHERE addy = ?");
+		    $returnVisit->execute(array($userAddy));
+			$timeResult = $returnVisit->fetch(PDO::FETCH_OBJ);
+			$timeDif = $time - $timeResult->time;
+			$reeferPay = $timeResult->reefer;
 			if($timeDif < $timeBetweenClaims){
 			$message = "You must wait 30 minutes between plays";
 			} else {
-		  mysqli_query($conn, "UPDATE faucetbox SET bbb = '$startBal', time = '$time' WHERE addy = '$userAddy'");
+		    $setNewGame = $conn->prepare("UPDATE faucetbox SET bbb = ?, time = ? WHERE addy = ?");
+			$setNewGame->execute(array($startBal, $time, $userAddy));
 			//check if ref and send ref payment
 			
 		    $currency = "BTC";
@@ -68,17 +80,18 @@
 		  session_start();
 		  $_SESSION['cow']=$userAddy;
 		  header('Location: ../faucetboxgame');
-		  mysqli_close($conn);
-		  }
+		   }
 		  
 		  } else if($numrowAddy == 0){
 		  //check for unique IP
-		   $checkIpp = mysqli_query($conn, "SELECT * FROM faucetbox WHERE ipp = '$ipp'");
-		   $numrowIpp = mysqli_num_rows($checkIpp);
+		   $checkIpp = $conn->prepare("SELECT * FROM faucetbox WHERE ipp = ?");
+		  $checkIpp->execute(array($ipp));
+		  $numrowIpp = count($checkIpp->fetchAll());
 		     if($numrowIpp > 0){
 		     die("Duplicate IP Detected");
 		     } else if($numrowIpp == 0){
-		  mysqli_query($conn, "INSERT INTO faucetbox (addy, time, bbb, ipp, reefer) VALUES ('$userAddy', '$timeNewUser', '$startBal', '$ipp', '$reefer')");
+		  $startNew = $conn->prepare("INSERT INTO faucetbox (addy, time, bbb, ipp, reefer) VALUES (?, ?, ?, ?, ?)"); 
+		  $startNew->execute(array('$userAddy', '$timeNewUser', '$startBal', '$ipp', '$reefer'));
 		  //new user registered forward to game area
 		  //payout to refeer
 		  
@@ -88,7 +101,6 @@
 		  session_start();
 		  $_SESSION['cow']=$userAddy;
 		  header('Location: ../faucetboxgame');
-		  mysqli_close($conn);
 		     }
 		  }
 		
