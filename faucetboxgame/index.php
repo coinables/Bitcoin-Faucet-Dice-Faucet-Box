@@ -1,36 +1,24 @@
 <?php
-
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'your_dbname');
-define('DB_USER', 'db_username');
-define('DB_PASS', 'your_db_password');
-
-	try{
-	$conn = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
-	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	}catch(PDOException $e){
-	echo $e->getMessage();
-	die();
+	$conn = mysqli_connect("localhost", "db_username", "db_password", "database_name");
+	if (mysqli_connect_errno()){
+	echo "Connection to DB failed" . mysqli_connect_error();
 	}
-	session_start();
+    session_start();
 	
 	//custom parameters
 	$api_key = "1234XYB"; //faucetbox API KEY
 	
 	$userAddy = $_SESSION['cow'];
 	require_once("faucetbox.php");
-	$selfNav = $conn->prepare("SELECT * FROM faucetbox WHERE addy = ?");
-	$selfNav->execute(array($userAddy));
-	$rowAssoc = $selfNav->fetch(PDO::FETCH_ASSOC);	
+	$selfNav = mysqli_query($conn, "SELECT * FROM faucetbox WHERE addy = '$userAddy'");
+	$rowNav = mysqli_num_rows($selfNav);
+	$rowAssoc = mysqli_fetch_assoc($selfNav);
 	$balance = $rowAssoc['bbb'];
 	$reefer = $rowAssoc['reefer'];
 	
 						
-	//redirect if not logged in or banned
-	$selfNav2 = $conn->prepare("SELECT * FROM faucetbox WHERE addy = ?");
-	$selfNav2->execute(array($userAddy));
-	$countSelfNav = count($selfNav2->fetchAll());
-	if($countSelfNav < 1){
+	//redirect if not logged in 
+	if($rowNav < 1){
 	header('Location: ../faucetbox');
 	} else {
 	
@@ -47,8 +35,7 @@ define('DB_PASS', 'your_db_password');
 		  if($result["success"] === true){
 		  $_SESSION['cashout'] = $result["html"];
 		  //reset balance to zero
-		  $resetZero = $conn->prepare("UPDATE faucetbox SET bbb = ? WHERE addy = ?");
-		  $resetZero->execute(array(0, $userAddy));
+		  mysqli_query($conn, "UPDATE faucetbox SET bbb = 0 WHERE addy = '$userAddy'");
 		  		header('Location: ../faucetbox');
 	}
 	}
@@ -74,40 +61,36 @@ define('DB_PASS', 'your_db_password');
 		} else if ($dbBet < 1 || $dbBet > 5000){
 		$message = "Bets must be between 1 - 5,000 Satoshi<br>";
 		} else {
-		$latestGame = "SELECT * FROM faucetboxgames WHERE addy = ? AND open = ? ORDER BY count DESC LIMIT 1";
-		$latestGameQuery = $conn->prepare($latestGame);
-		$latestGameQuery->execute(array($userAddy, 0));
-		$latestR = $latestGameQuery->fetch(PDO::FETCH_ASSOC);
+		$latestGame = 	 "SELECT * FROM faucetboxgames 
+					 WHERE addy = '$userAddy' AND open = 0 
+					 ORDER BY count DESC LIMIT 1";
+			$latestQ = mysqli_query($conn, $latestGame);
+			$latestR = mysqli_fetch_assoc($latestQ);
 			$luckyNum = $latestR['roll'];
 			$gmID = $latestR['gid'];
 			$luckySecret = $latestR['salt'];
 			$target2 = 100 / $multi;
 		    $calcHiRoll = 100 - $target2;
-			$updateUserInput = $conn->prepare("UPDATE faucetboxgames SET ltgt = ?, bet = ?, uuu = ?, open = ? WHERE gid = ?");
-			$updateUserInput->execute(array(2, $dbBet, $calcHiRoll, 1, $gmID));
+			mysqli_query($conn, "UPDATE faucetboxgames SET ltgt = 2, bet = $dbBet, uuu = $calcHiRoll, open = 1 WHERE gid = '$gmID'");
 			
 			if($luckyNum > $calcHiRoll && $dbBet <= $balance){
 			//user wins
 			$diceMsg = "You Won +".sprintf('%.0F',$netProfit)." Satoshis!";
 			//verify game was legit
-			$vgQuery = $conn->prepare("SELECT * FROM faucetboxgames WHERE gid = ?");
-			$vgQuery->execute(array($gmID));
-			$vgResult = $vgQuery->fetch(PDO::FETCH_ASSOC);
+			$vgQuery = mysqli_query($conn, "SELECT * FROM faucetboxgames WHERE gid = '$gmID'");
+			$vgResult = mysqli_fetch_assoc($vgQuery);
 			$vgBet = $vgResult['bet'];
 			$vgBatb = $vgResult['batb'];
 				if($vgBet > $vgBatb || $vgBet != $dbBet || $dbBet < 1){
 				    
 					die("A fatal error has occurred");
 				} else {
-				$updateGameWin = $conn->prepare("UPDATE faucetboxgames SET profit = ? WHERE gid = ?");
-				$updateGameWin->execute(array($dbPrize, $gmID));
-				$updateUserWin = $conn->prepare("UPDATE faucetbox SET bbb = bbb + ? WHERE addy = ?");
-				$updateUserWin->execute(array($dbPrize, $userAddy));
-					
+				mysqli_query($conn, "UPDATE faucetboxgames SET profit = '$dbPrize' WHERE gid = '$gmID'");
+				mysqli_query($conn, "UPDATE faucetbox SET bbb = bbb + '$dbPrize' WHERE addy = '$userAddy'");
+			
 				//display updated balance
-				$balQuery = $conn->prepare("SELECT bbb FROM faucetbox WHERE addy = ?");
-				$balQuery->execute(array($userAddy));
-				$rowAssoc = $balQuery->fetch(PDO::FETCH_ASSOC);
+				$balQuery = mysqli_query($conn, "SELECT bbb FROM faucetbox WHERE addy = '$userAddy'");
+				$rowAssoc = mysqli_fetch_assoc($balQuery);
 				$balance = $rowAssoc['bbb'];
 	            $calcBal = $balance / 100000000;
 				}
@@ -116,23 +99,18 @@ define('DB_PASS', 'your_db_password');
 			$lossBet = $dbBet * -1;
 			$diceMsg = "You Lost -".sprintf('%.0F',$betAmt)." Satoshis";
 			//verify game was legit
-			$vgQuery = $conn->prepare("SELECT * FROM faucetboxgames WHERE gid = ?");
-			$vgQuery->execute(array($gmID));
-			$vgResult = $vgQuery->fetch(PDO::FETCH_ASSOC);
+			$vgQuery = mysqli_query($conn, "SELECT * FROM faucetboxgames WHERE gid = '$gmID'");
+			$vgResult = mysqli_fetch_assoc($vgQuery);
 			$vgBet = $vgResult['bet'];
 			$vgBatb = $vgResult['batb'];
 				if($vgBet > $vgBatb || $vgBet != $dbBet || $dbBet < 1){
 				    die("A fatal error has occurred");
 				} else {
-			$updateGameLoss = $conn->prepare("UPDATE faucetboxgames SET profit = ? WHERE gid = ?");
-			$updateGameLoss->execute(array($lossBet, $gmID));
-			$updateUserLoss = $conn->prepare("UPDATE faucetbox SET bbb = bbb - ? WHERE addy = ?");
-			$updateUserLoss->execute(array($dbBet, $userAddy));	
-			
+			mysqli_query($conn, "UPDATE faucetbox SET bbb = bbb - '$dbBet' WHERE addy = '$userAddy'");
+			mysqli_query($conn, "UPDATE faucetboxgames SET profit = '$lossBet' WHERE gid = '$gmID'");
 				//display updated balance
-				$balQuery = $conn->prepare("SELECT bbb FROM faucetbox WHERE addy = ?");
-				$balQuery->execute(array($userAddy));
-				$rowAssoc = $balQuery->fetch(PDO::FETCH_ASSOC);
+				$balQuery = mysqli_query($conn, "SELECT bbb FROM faucetbox WHERE addy = '$userAddy'");
+				$rowAssoc = mysqli_fetch_assoc($balQuery);
 				$balance = $rowAssoc['bbb'];
 	            $calcBal = $balance / 100000000;
 				}
@@ -154,8 +132,7 @@ define('DB_PASS', 'your_db_password');
 		  if($result["success"] === true){
 		  $_SESSION['cashout'] = $result["html"];
 		  //reset balance to zero
-		  $resetZero = $conn->prepare("UPDATE faucetbox SET bbb = ? WHERE addy = ?");
-		  $resetZero->execute(array(0, $userAddy));
+		  mysqli_query($conn, "UPDATE faucetbox SET bbb = 0 WHERE addy = '$userAddy'");
 		  		header('Location: ../faucetbox');
 	}
 	}
@@ -182,40 +159,37 @@ define('DB_PASS', 'your_db_password');
 		} else if ($dbBet < 1 || $dbBet > 5000){
 		$message = "Bets must be between 1 - 5,000 Satoshi<br>";
 		} else {
-		$latestGame = "SELECT * FROM faucetboxgames WHERE addy = ? AND open = ? ORDER BY count DESC LIMIT 1";
-		$latestGameQuery = $conn->prepare($latestGame);
-		$latestGameQuery->execute(array($userAddy, 0));
-		$latestR = $latestGameQuery->fetch(PDO::FETCH_ASSOC);
+		$latestGame = 	 "SELECT * FROM faucetboxgames 
+					 WHERE addy = '$userAddy' AND open = 0 
+					 ORDER BY count DESC LIMIT 1";
+			$latestQ = mysqli_query($conn, $latestGame);
+			$latestR = mysqli_fetch_assoc($latestQ);
 			$luckyNum = $latestR['roll'];
 			$gmID = $latestR['gid'];
 			$luckySecret = $latestR['salt'];
 			$target2 =  100 / $multi;
 			$userTarget =  100 / $multi;
-			$updateUserInput = $conn->prepare("UPDATE faucetboxgames SET ltgt = ?, bet = ?, uuu = ?, open = ? WHERE gid = ?");
-			$updateUserInput->execute(array(1, $dbBet, $userTarget, 1, $gmID));
-						
+			mysqli_query($conn, "UPDATE faucetboxgames SET ltgt = 1, bet = $dbBet, uuu = $userTarget, open = 1 WHERE gid = '$gmID'");
+			
 			if($luckyNum < $target2 && $dbBet <= $balance){
 			//user wins
 			$diceMsg = "You Won +".sprintf('%.0F',$netProfit)." Satoshis!";
 			
+			
 			//verify game was legit
-			$vgQuery = $conn->prepare("SELECT * FROM faucetboxgames WHERE gid = ?");
-			$vgQuery->execute(array($gmID));
-			$vgResult = $vgQuery->fetch(PDO::FETCH_ASSOC);
+			$vgQuery = mysqli_query($conn, "SELECT * FROM faucetboxgames WHERE gid = '$gmID'");
+			$vgResult = mysqli_fetch_assoc($vgQuery);
 			$vgBet = $vgResult['bet'];
 			$vgBatb = $vgResult['batb'];
 				if($vgBet > $vgBatb || $vgBet != $dbBet || $dbBet < 1){
 				    die("A fatal error has occurred");
 				} else {
-				$updateGameWin = $conn->prepare("UPDATE faucetboxgames SET profit = ? WHERE gid = ?");
-				$updateGameWin->execute(array($dbPrize, $gmID));
-				$updateUserWin = $conn->prepare("UPDATE faucetbox SET bbb = bbb + ? WHERE addy = ?");
-				$updateUserWin->execute(array($dbPrize, $userAddy));
+				mysqli_query($conn, "UPDATE faucetboxgames SET profit = '$dbPrize' WHERE gid = '$gmID'");
+				mysqli_query($conn, "UPDATE faucetbox SET bbb = bbb + '$dbPrize' WHERE addy = '$userAddy'");
 				
 				//display updated balance
-				$balQuery = $conn->prepare("SELECT bbb FROM faucetbox WHERE addy = ?");
-				$balQuery->execute(array($userAddy));
-				$rowAssoc = $balQuery->fetch(PDO::FETCH_ASSOC);
+				$balQuery = mysqli_query($conn, "SELECT bbb FROM faucetbox WHERE addy = '$userAddy'");
+				$rowAssoc = mysqli_fetch_assoc($balQuery);
 				$balance = $rowAssoc['bbb'];
 	            $calcBal = $balance / 100000000;
 				}
@@ -226,23 +200,18 @@ define('DB_PASS', 'your_db_password');
 			$userTarget =  100 / $multi;
 			
 			//verify game was legit
-			$vgQuery = $conn->prepare("SELECT * FROM faucetboxgames WHERE gid = ?");
-			$vgQuery->execute(array($gmID));
-			$vgResult = $vgQuery->fetch(PDO::FETCH_ASSOC);
+			$vgQuery = mysqli_query($conn, "SELECT * FROM faucetboxgames WHERE gid = '$gmID'");
+			$vgResult = mysqli_fetch_assoc($vgQuery);
 			$vgBet = $vgResult['bet'];
 			$vgBatb = $vgResult['batb'];
 				if($vgBet > $vgBatb || $vgBet != $dbBet || $dbBet < 1){
 				    die("A fatal error has occurred");
 				} else {
-				$updateGameLoss = $conn->prepare("UPDATE faucetboxgames SET profit = ? WHERE gid = ?");
-				$updateGameLoss->execute(array($lossBet, $gmID));
-				$updateUserLoss = $conn->prepare("UPDATE faucetbox SET bbb = bbb - ? WHERE addy = ?");
-				$updateUserLoss->execute(array($dbBet, $userAddy));	
-				
+				mysqli_query($conn, "UPDATE faucetbox SET bbb = bbb - '$dbBet' WHERE addy = '$userAddy'");
+				mysqli_query($conn, "UPDATE faucetboxgames SET profit = $lossBet WHERE gid = '$gmID'");
 				//display updated balance
-				$balQuery = $conn->prepare("SELECT bbb FROM faucetbox WHERE addy = ?");
-				$balQuery->execute(array($userAddy));
-				$rowAssoc = $balQuery->fetch(PDO::FETCH_ASSOC);
+				$balQuery = mysqli_query($conn, "SELECT bbb FROM faucetbox WHERE addy = '$userAddy'");
+				$rowAssoc = mysqli_fetch_assoc($balQuery);
 				$balance = $rowAssoc['bbb'];
 	            $calcBal = $balance / 100000000;
 				}
@@ -269,18 +238,16 @@ define('DB_PASS', 'your_db_password');
 	$pick2 = $pick / 100;
 	$proof = sha1($salt.$spacer.$pick2);
   //check balance
-  $verifyQuery = $conn->prepare("SELECT * FROM faucetbox WHERE addy = ?");
-  $verifyQuery->execute(array($userAddy));
-  $verifyResult = $verifyQuery->fetch(PDO::FETCH_ASSOC);
+  $verifyQuery = mysqli_query($conn, "SELECT * FROM faucetbox WHERE addy = '$userAddy'");
+  $verifyResult = mysqli_fetch_assoc($verifyQuery);
   $verifyBalance = $verifyResult['bbb'];
-  $initiateGame = $conn->prepare("INSERT INTO faucetboxgames (gid, addy, salt, roll, batb) VALUES (?, ?, ?, ?, ?)");
-  $initiateGame->execute(array($gameid, $userAddy, $salt, $pick2, $verifyBalance));	
+	mysqli_query($conn, "INSERT INTO faucetboxgames (gid, addy, salt, roll, batb) VALUES ('$gameid', '$userAddy', '$salt', '$pick2', '$verifyBalance')");
+		
 	
 	
 	if(isset($_POST['cashout'])){
-	    $cashQuery = $conn->prepare("SELECT * FROM faucetbox WHERE addy = ?");
-		$cashQuery->execute(array($userAddy));
-		$cashResult = $cashQuery->fetch(PDO::FETCH_ASSOC);
+	    $cashQuery = mysqli_query($conn, "SELECT * FROM faucetbox WHERE addy = '$userAddy'") or die("fatal error.");
+        $cashResult = mysqli_fetch_assoc($cashQuery);
         $amount = $cashResult['bbb'];
 		if($amount > 99999){
 		die("Stop hacking you hacker");
@@ -292,9 +259,8 @@ define('DB_PASS', 'your_db_password');
 		$result = $faucetbox->send($userAddy, $amount);
 		  if($result["success"] === true){
 		  $_SESSION['cashout'] = $result["html"];
-		 //reset balance to zero
-		  $resetZero = $conn->prepare("UPDATE faucetbox SET bbb = ? WHERE addy = ?");
-		  $resetZero->execute(array(0, $userAddy));
+		  //reset balance to zero
+		  mysqli_query($conn, "UPDATE faucetbox SET bbb = 0 WHERE addy = '$userAddy'");
 		  		header('Location: ../faucetbox');
 		  } else{
 		  
@@ -698,12 +664,9 @@ function noteLimit(element, stopAt)
 </tr>
 <?php 
 	
-    $queryHist = $conn->prepare("SELECT * FROM faucetboxgames WHERE open = ? AND addy = ? ORDER BY count DESC LIMIT 25");
-	$queryHist->execute(array(1, $userAddy));	
-	$resultH = $queryHist->fetchAll(PDO::FETCH_ASSOC);
-
-foreach($resultH as $outputsH)
-{
+$queryHist ="SELECT * FROM faucetboxgames WHERE open = 1 AND addy = '$userAddy' ORDER BY count DESC LIMIT 25";
+$resultH=mysqli_query($conn, $queryHist) or die (mysqli_error($conn));
+while($outputsH=mysqli_fetch_assoc($resultH)){
     echo "<tr>";
 	echo "<td>".$outputsH['count']."</td>";
 	echo "<td>".$outputsH['salt']."</td>";
@@ -716,7 +679,9 @@ foreach($resultH as $outputsH)
 		if($btcProfit > 0){$proColor="rollWin";} else {$proColor="rollLose";}
 	echo '<td><span class="'.$proColor.'">'.sprintf('%.8F',$btcProfit).'</span></td>';
 	echo "</tr>";
-}
+}	
+
+mysqli_close($conn);
 
 ?>
 </table><br><h3>Provably Fair</h3>
