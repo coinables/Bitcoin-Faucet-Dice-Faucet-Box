@@ -10,11 +10,11 @@
 	$startBal = 300; //starting balance for users
 	$reefAmount = 300; //referral amount
 	$timeBetweenClaims = 1800; //wait time between claims in seconds
-	require_once("ayah.php"); //Are You A Human Bot Protection insert your keys in the ayah_config file
-	                          //Sign up for a free account at areyouahuman.com to get your keys
-	require_once("faucetbox.php");
+	$private_key = "1a1a1a_1a1a1a_1a_1a1"; //funcaptcha private key
+	$publicKey = "1b1b1_1b1b_1b1b1b1"; //funcaptcha public key
 	
-	$ayah = new AYAH();
+	
+	require_once("faucetbox.php");
 	$reefer = $_GET['ref'];
 	mysqli_set_charset($conn,"utf8");
 	$reefer = mysqli_real_escape_string($conn, $reefer);
@@ -30,11 +30,13 @@
 		$faucetBal = $faucetbox->getBalance();
 		$getfaucetbal2 = $faucetBal["balance_bitcoin"];
 
-	if(array_key_exists('start', $_POST))
+	if(isset($_POST['start']) && !empty($_POST['start']))
 {
 		$time = time();
-		$score = $ayah->scoreResult();
-		if ($score)  
+		
+		$session_token = $_POST["fc-token"];
+		$fc_api_url = "https://funcaptcha.com/fc/v/?private_key=".$private_key."&session_token=".$session_token."&simple_mode=1";
+		if (file_get_contents($fc_api_url) === "1") 
 	{
 		$userAddy = $_POST['bitad'];
 		mysqli_set_charset($conn,"utf8");
@@ -326,6 +328,7 @@ a {
 }
 
 </style>
+<script src="https://funcaptcha.com/fc/api/" async defer></script>
 </head>
 <body>
 <br><div id="user"><img src="logo.png"></div>
@@ -342,7 +345,7 @@ a {
 		  </div> <br>
 		<center><?php echo "<span id='error'>".$message."</span>"; echo "<span id='msg'>".$prizeMsg."</span>"; ?></center><br>
  <form method="post"><center>
-    <?php  echo $ayah->getPublisherHTML(); ?>
+    <div id="funcaptcha" data-pkey="<?php echo $publicKey; ?>"></div>
 	--AD SPOT--
 <input type="text" name="bitad" id="bitad" size="65" placeholder="Your BTC Address"><br>
  <input type="submit" name="start" id="claimBtn" value="PLAY"><br><br></form>
