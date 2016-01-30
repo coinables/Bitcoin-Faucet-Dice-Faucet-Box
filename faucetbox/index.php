@@ -3,23 +3,25 @@
 	if (mysqli_connect_errno()){
 	echo "Connection to DB failed" . mysqli_connect_error();
 	}
-	session_start();
+	if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+	}
 	
 	//custom parameters
 	$api_key = "1234XYB"; //faucetbox API KEY
 	$startBal = 300; //starting balance for users
 	$reefAmount = 300; //referral amount
 	$timeBetweenClaims = 1800; //wait time between claims in seconds
-	$private_key = "1a1a1a_1a1a1a_1a_1a1"; //funcaptcha private key
-	$publicKey = "1b1b1_1b1b_1b1b1b1"; //funcaptcha public key
-	
+	$recaptchaKey = "6Lsitekey"; //recaptcha site key
+	$recaptchaSecret = "6Lsecretkey"; //recaptcha secret key
 	
 	require_once("faucetbox.php");
-	$reefer = $_GET['ref'];
 	mysqli_set_charset($conn,"utf8");
+	if(isset($_GET['ref'])){
+	$reefer = $_GET['ref'];
 	$reefer = mysqli_real_escape_string($conn, $reefer);
+	}
 	$ipp = $_SERVER['REMOTE_ADDR'];
-	$timeRaw = time();
 	$timeNewUser = time();
 	$zero = 0;
 	
@@ -30,19 +32,22 @@
 		$faucetBal = $faucetbox->getBalance();
 		$getfaucetbal2 = $faucetBal["balance_bitcoin"];
 
-	if(isset($_POST['start']) && !empty($_POST['start']))
+	if(isset($_POST['g-recaptcha-response']))
 {
+		$capResponse = $_POST['g-recaptcha-response'];
+		$pingCaptcha = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$recaptchaSecret&response=$capResponse&remoteip=$ipp");
+		$jsonCaptcha = json_decode($pingCaptcha, TRUE);
+		$captchaSuccess = $jsonCaptcha["success"];
 		$time = time();
-		
-		$session_token = $_POST["fc-token"];
-		$fc_api_url = "https://funcaptcha.com/fc/v/?private_key=".$private_key."&session_token=".$session_token."&simple_mode=1";
-		if (file_get_contents($fc_api_url) === "1") 
+		if ($captchaSuccess == "true")
 	{
 		$userAddy = $_POST['bitad'];
 		mysqli_set_charset($conn,"utf8");
 		$userAddy = mysqli_real_escape_string($conn, $userAddy);
-		if($reefer == $userAddy){
+		if(isset($reefer)){
+		  if($reefer == $userAddy){
 		die("You Cant Refer Yourself");
+		  }
 		}
 				
 		//check if already in DB
@@ -67,7 +72,6 @@
 				//this is a referral send ref payment
 				$reefResult = $faucetbox->sendReferralEarnings($reeferPay, $reefAmount);
 				}	
-		  session_start();
 		  $_SESSION['cow']=$userAddy;
 		  header('Location: ../faucetboxgame');
 		  mysqli_close($conn);
@@ -83,11 +87,12 @@
 		  mysqli_query($conn, "INSERT INTO faucetbox (addy, time, bbb, ipp, reefer) VALUES ('$userAddy', '$timeNewUser', '$startBal', '$ipp', '$reefer')");
 		  //new user registered forward to game area
 		  //payout to refeer
-		  
+		  if(isset($_GET['ref'])){
 		  $currency = "BTC";
 		  $faucetbox = new Faucetbox($api_key, $currency);
+		  $reefAmount = 60;
 		  $reefResult2 = $faucetbox->sendReferralEarnings($reefer, $reefAmount);
-		  session_start();
+		  }
 		  $_SESSION['cow']=$userAddy;
 		  header('Location: ../faucetboxgame');
 		  mysqli_close($conn);
@@ -328,7 +333,7 @@ a {
 }
 
 </style>
-<script src="https://funcaptcha.com/fc/api/" async defer></script>
+<script src='https://www.google.com/recaptcha/api.js'></script>
 </head>
 <body>
 <br><div id="user"><img src="logo.png"></div>
@@ -343,9 +348,9 @@ a {
 		Just enter your bitcoin address below, fill out the captcha, and press Play. You can start a new game every 30 minutes. 
 		You can withdrawal immediately to FaucetBox. 
 		  </div> <br>
-		<center><?php echo "<span id='error'>".$message."</span>"; echo "<span id='msg'>".$prizeMsg."</span>"; ?></center><br>
- <form method="post"><center>
-    <div id="funcaptcha" data-pkey="<?php echo $publicKey; ?>"></div>
+		<center><?php if(isset($message)){ echo "<span id='error'>".$message."</span>"; } else if(isset($prizeMsg)){ echo "<span id='msg'>".$prizeMsg."</span>"; } ?></center><br>
+  <form method="post"><center>
+    <div class="g-recaptcha" data-sitekey="<?php echo $recaptchaKey; ?>"></div>
 	--AD SPOT--
 <input type="text" name="bitad" id="bitad" size="65" placeholder="Your BTC Address"><br>
  <input type="submit" name="start" id="claimBtn" value="PLAY"><br><br></form>
