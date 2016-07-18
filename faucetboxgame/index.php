@@ -226,11 +226,7 @@
   //generate roll id
     $gameid = uniqid();
   //generate salt
-  $genSalt = time();
-  $genSalt2 = mt_rand(1111111, 3333333);
-  $genSalt3 = $genSalt2 / 1000;
-  $genSalt4 = $genSalt3 * $genSalt;
-  $salt = sha1($genSalt4);
+  $salt = bin2hex(openssl_random_psuedo_bytes(32));
   $spacer = "+";
    //generate roll 
 	$pick = mt_rand(0, 10000);
