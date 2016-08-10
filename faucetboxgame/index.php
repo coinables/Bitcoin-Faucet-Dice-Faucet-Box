@@ -226,7 +226,7 @@
   //generate roll id
     $gameid = uniqid();
   //generate salt
-  $salt = bin2hex(openssl_random_psuedo_bytes(32));
+  $salt = bin2hex(openssl_random_pseudo_bytes(32));
   $spacer = "+";
    //generate roll 
 	$pick = mt_rand(0, 10000);
