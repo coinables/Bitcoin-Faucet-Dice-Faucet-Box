@@ -59,7 +59,13 @@
 			$timeResult = mysqli_fetch_assoc($timeQuery);
 			$timeDif = $time - $timeResult['time'];
 			$reeferPay = $timeResult['reefer'];
-			if($timeDif < $timeBetweenClaims){
+			  
+			  //check last time IP claimed
+			  $timeQuery2 = mysqli_query($conn, "SELECT * FROM faucetbox WHERE ipp = '$ipp'");
+			  $timeResult2 = mysqli_fetch_assoc($timeQuery2);
+			  $timeDif2 = $time - $timeResult2['time'];
+			  
+			if($timeDif < $timeBetweenClaims || $timeDif2 < $timeBetweenClaims){
 			$message = "You must wait 30 minutes between plays";
 			} else {
 		  mysqli_query($conn, "UPDATE faucetbox SET bbb = '$startBal', time = '$time' WHERE addy = '$userAddy'");
